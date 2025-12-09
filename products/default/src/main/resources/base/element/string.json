@@ -1,0 +1,52 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "反声 - 音频录制与逆转播放应用"
+    },
+    {
+      "name": "ability_desc", 
+      "value": "反声 ReVoice"
+    },
+    {
+      "name": "ability_label",
+      "value": "反声"
+    },
+    {
+      "name": "grid_title_label",
+      "value": "title"
+    },
+    {
+      "name": "adaptive_layout",
+      "value": "adaptive layout"
+    },
+    {
+      "name": "system_cap",
+      "value": "system capabilities"
+    },
+    {
+      "name": "responsive_layout",
+      "value": "responsive layout"
+    },
+    {
+      "name": "location_cap_invalid",
+      "value": "This device does not have the system capability of location service"
+    },
+    {
+      "name": "location_cap_valid",
+      "value": "This device has the system capability of location service"
+    },
+    {
+      "name": "mic_reason",
+      "value": "用于录制音频内容"
+    },
+    {
+      "name": "read_media_reason", 
+      "value": "用于读取音频文件"
+    },
+    {
+      "name": "write_media_reason",
+      "value": "用于保存音频文件"
+    }
+  ]
+}
