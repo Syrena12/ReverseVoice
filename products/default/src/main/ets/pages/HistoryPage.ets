@@ -229,7 +229,7 @@ export struct HistoryPage {
       }
       .width('100%')
       .margin({ top: 60, bottom: 20 })
-      .padding({ horizontal: 20 })
+      .padding({ left: 20, right: 20 })
 
       // 错误消息
       if (this.errorMessage) {
@@ -237,7 +237,7 @@ export struct HistoryPage {
           .fontSize(14)
           .fontColor('#EF4444')
           .margin({ bottom: 16 })
-          .padding({ horizontal: 20 })
+          .padding({ left: 20, right: 20 })
       }
 
       // 文件列表
@@ -280,7 +280,7 @@ export struct HistoryPage {
         }
         .width('100%')
         .layoutWeight(1)
-        .padding({ horizontal: 20 })
+        .padding({ left: 20, right: 20 })
       }
     }
     .width('100%')
@@ -402,7 +402,7 @@ export struct HistoryPage {
       }
     }
     .width('100%')
-    .padding({ horizontal: 16, vertical: 12 })
+    .padding({ left: 16, right: 16, top: 12, bottom: 12 })
     .backgroundColor('#FFFFFF')
     .borderRadius(12)
     .alignItems(VerticalAlign.Center)

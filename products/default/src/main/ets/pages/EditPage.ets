@@ -341,7 +341,7 @@ export struct EditPage {
               })
             }
             .width('100%')
-            .padding({ horizontal: 16, vertical: 16 })
+            .padding({ left: 16, right: 16, top: 16, bottom: 16 })
             .backgroundColor('#FFFFFF')
             .borderRadius(12)
             .margin({ bottom: 20 })
@@ -403,7 +403,7 @@ export struct EditPage {
     .height('100%')
     .backgroundColor('#F5F5F9')
     .alignItems(HorizontalAlign.Center)
-    .padding({ horizontal: 20 })
+    .padding({ left: 20, right: 20 })
     .bindContentCover($$this.showFileSelector, this.fileSelectorDialog())
   }
 
@@ -442,7 +442,7 @@ export struct EditPage {
                 .alignItems(HorizontalAlign.Start)
               }
               .width('100%')
-              .padding({ horizontal: 16, vertical: 12 })
+              .padding({ left: 16, right: 16, top: 12, bottom: 12 })
               .backgroundColor('#F8FAFC')
               .borderRadius(8)
               .onClick(() => this.selectAudioFile(file))
@@ -455,7 +455,7 @@ export struct EditPage {
         Text('暂无音频文件')
           .fontSize(14)
           .fontColor('#9CA3AF')
-          .margin({ vertical: 40 })
+          .margin({ top: 40, bottom: 40 })
       }
 
       Button('取消')

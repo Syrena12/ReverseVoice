@@ -1,6 +1,8 @@
 import { AudioManager } from '../manager/AudioManager';
 import { FileManager } from '../manager/FileManager';
+import { UserManager } from '../manager/UserManager';
 import { abilityAccessCtrl, common } from '@kit.AbilityKit';
+import promptAction from '@ohos.promptAction';
 
 @Component
 export struct RecordPage {
@@ -11,19 +13,30 @@ export struct RecordPage {
   @State showActions: boolean = false;
   @State currentRecordingPath: string = '';
   @State errorMessage: string = '';
+  @State isDarkMode: boolean = false;
 
   private audioManager: AudioManager | null = null;
   private fileManager: FileManager | null = null;
+  private userManager: UserManager | null = null;
   private context: common.UIAbilityContext | null = null;
   private recordTimer: number = -1;
   private recordStartTime: number = 0;
 
   aboutToAppear() {
     this.initializeManagers();
+    this.loadThemePreference();
   }
 
   aboutToDisappear() {
     this.cleanup();
+  }
+
+  // 加载主题偏好
+  private loadThemePreference() {
+    this.isDarkMode = AppStorage.get<boolean>('dark_mode') || false;
+    
+    // 监听主题变化
+    AppStorage.setAndLink('dark_mode', this.isDarkMode);
   }
 
   // 初始化管理器
@@ -238,7 +251,7 @@ export struct RecordPage {
       // 波形显示区域
       Column() {
         Row() {
-          ForEach(Array(20).fill(0).map((_, i) => i), (item: number) => {
+          ForEach(Array(20).fill(0).map((_: number, i: number) => i), (item: number) => {
             Column()
               .width(3)
               .height(this.isRecording ? Math.random() * 60 + 10 : 20)
@@ -342,7 +355,68 @@ export struct RecordPage {
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#FFFFFF')
+    .backgroundColor(this.isDarkMode ? '#1F2937' : '#FFFFFF')
     .alignItems(HorizontalAlign.Center)
+  }
+  @Builder
+  buildActionButtons() {
+    Column() {
+      // 第一行按钮
+      Row() {
+        Button('保存')
+          .width(120)
+          .height(44)
+          .backgroundColor('#10B981')
+          .borderRadius(22)
+          .fontSize(16)
+          .fontColor('#FFFFFF')
+          .onClick(async () => {
+            await this.saveRecording();
+          })
+
+        Button(this.isPlaying ? '暂停' : '播放')
+          .width(120)
+          .height(44)
+          .backgroundColor('#3B82F6')
+          .borderRadius(22)
+          .fontSize(16)
+          .fontColor('#FFFFFF')
+          .margin({ left: 20 })
+          .onClick(async () => {
+            await this.playRecording();
+          })
+      }
+      .justifyContent(FlexAlign.Center)
+      .margin({ bottom: 16 })
+
+      // 第二行按钮
+      Row() {
+        Button('逆转播放')
+          .width(120)
+          .height(44)
+          .backgroundColor('#8B5CF6')
+          .borderRadius(22)
+          .fontSize(16)
+          .fontColor('#FFFFFF')
+          .onClick(async () => {
+            await this.reversePlay();
+          })
+
+        Button('重录')
+          .width(120)
+          .height(44)
+          .backgroundColor('#F59E0B')
+          .borderRadius(22)
+          .fontSize(16)
+          .fontColor('#FFFFFF')
+          .margin({ left: 20 })
+          .onClick(() => {
+            this.resetRecording();
+          })
+      }
+      .justifyContent(FlexAlign.Center)
+    }
+    .width('100%')
+    .padding({ left: 20, right: 20 })
   }
 }

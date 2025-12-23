@@ -7,6 +7,19 @@ import { MePage } from '../pages/MePage';
 @Component
 struct Index {
   @State currentTabIndex: number = 0;
+  @State isDarkMode: boolean = false;
+
+  aboutToAppear() {
+    this.loadThemePreference();
+  }
+
+  // 加载主题偏好
+  private loadThemePreference() {
+    this.isDarkMode = AppStorage.get<boolean>('dark_mode') || false;
+    
+    // 监听主题变化
+    AppStorage.setAndLink('dark_mode', this.isDarkMode);
+  }
 
   build() {
     Column() {
@@ -33,14 +46,14 @@ struct Index {
       }
       .width('100%')
       .height(80)
-      .backgroundColor('#FFFFFF')
-      .borderColor('#E5E7EB')
+      .backgroundColor(this.isDarkMode ? '#374151' : '#FFFFFF')
+      .borderColor(this.isDarkMode ? '#4B5563' : '#E5E7EB')
       .borderWidth({ top: 1 })
       .padding({ top: 8, bottom: 8 })
     }
     .height('100%')
     .width('100%')
-    .backgroundColor('#F5F5F9')
+    .backgroundColor(this.isDarkMode ? '#1F2937' : '#F5F5F9')
   }
 
   @Builder
@@ -49,8 +62,9 @@ struct Index {
       Image(this.currentTabIndex === index ? selectedIcon : icon)
         .width(24)
         .height(24)
+        .fillColor(this.currentTabIndex === index ? '#6366F1' : (this.isDarkMode ? '#9CA3AF' : '#8F90A6'))
       Text(name)
-        .fontColor(this.currentTabIndex === index ? '#6366F1' : '#8F90A6')
+        .fontColor(this.currentTabIndex === index ? '#6366F1' : (this.isDarkMode ? '#9CA3AF' : '#8F90A6'))
         .fontSize(12)
         .margin({ top: 4 })
     }

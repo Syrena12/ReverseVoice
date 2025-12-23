@@ -9,15 +9,41 @@ export interface AudioAnalysisResult {
   bitDepth: number;
 }
 
+export interface WaveHeaderInfo {
+  sampleRate: number;
+  channels: number;
+  bitDepth: number;
+  dataOffset: number;
+  dataSize: number;
+  duration: number;
+}
+
+export interface WaveExtractionInfo {
+  dataOffset: number;
+  dataSize: number;
+  bitDepth: number;
+  channels: number;
+}
+
+export interface SilenceSegment {
+  start: number;
+  end: number;
+}
+
 export class AudioAnalyzer {
   
   // 从音频文件分析波形数据
   static async analyzeAudioFile(filePath: string, targetPeaks: number = 1000): Promise<AudioAnalysisResult> {
     try {
-      const audioBuffer = await this.readAudioFile(filePath);
-      const wavInfo = this.parseWaveHeader(audioBuffer);
-      const audioData = this.extractAudioData(audioBuffer, wavInfo);
-      const peaks = this.generatePeaks(audioData, targetPeaks, wavInfo.channels);
+      const audioBuffer = await AudioAnalyzer.readAudioFile(filePath);
+            const wavInfo = AudioAnalyzer.parseWaveHeader(audioBuffer);
+      const audioData = AudioAnalyzer.extractAudioData(audioBuffer, {
+        dataOffset: wavInfo.dataOffset,
+        dataSize: wavInfo.dataSize,
+        bitDepth: wavInfo.bitDepth,
+        channels: wavInfo.channels
+      });
+      const peaks = AudioAnalyzer.generatePeaks(audioData, targetPeaks, wavInfo.channels);
       
       const waveformData: WaveformData = {
         peaks,
@@ -34,7 +60,7 @@ export class AudioAnalyzer {
       };
     } catch (error) {
       console.error('Failed to analyze audio file:', error);
-      throw error;
+      throw new Error('Failed to analyze audio file');
     }
   }
 
@@ -49,19 +75,12 @@ export class AudioAnalyzer {
       return buffer;
     } catch (error) {
       console.error('Failed to read audio file:', error);
-      throw error;
+      throw new Error('Failed to read audio file');
     }
   }
 
   // 解析WAV文件头
-  private static parseWaveHeader(buffer: ArrayBuffer): {
-    sampleRate: number;
-    channels: number;
-    bitDepth: number;
-    dataOffset: number;
-    dataSize: number;
-    duration: number;
-  } {
+  private static parseWaveHeader(buffer: ArrayBuffer): WaveHeaderInfo {
     const view = new DataView(buffer);
     
     // 检查RIFF标识
@@ -106,7 +125,7 @@ export class AudioAnalyzer {
           if (dataChunkId === 'data') {
             const duration = (dataChunkSize / (sampleRate * channels * (bitDepth / 8)));
             
-            return {
+            const headerInfo: WaveHeaderInfo = {
               sampleRate,
               channels,
               bitDepth,
@@ -114,6 +133,8 @@ export class AudioAnalyzer {
               dataSize: dataChunkSize,
               duration
             };
+            
+            return headerInfo;
           }
           
           dataOffset += 8 + dataChunkSize;
@@ -129,12 +150,7 @@ export class AudioAnalyzer {
   }
 
   // 提取音频数据
-  private static extractAudioData(buffer: ArrayBuffer, wavInfo: {
-    dataOffset: number;
-    dataSize: number;
-    bitDepth: number;
-    channels: number;
-  }): Float32Array {
+  private static extractAudioData(buffer: ArrayBuffer, wavInfo: WaveExtractionInfo): Float32Array {
     const view = new DataView(buffer, wavInfo.dataOffset, wavInfo.dataSize);
     const sampleCount = wavInfo.dataSize / (wavInfo.bitDepth / 8);
     const audioData = new Float32Array(sampleCount);
@@ -276,8 +292,8 @@ export class AudioAnalyzer {
   }
 
   // 检测音频中的静音段
-  static detectSilence(peaks: number[], threshold: number = 0.01): { start: number, end: number }[] {
-    const silenceSegments: { start: number, end: number }[] = [];
+  static detectSilence(peaks: number[], threshold: number = 0.01): SilenceSegment[] {
+    const silenceSegments: SilenceSegment[] = [];
     let silenceStart = -1;
     
     for (let i = 0; i < peaks.length; i++) {
@@ -287,10 +303,11 @@ export class AudioAnalyzer {
         }
       } else {
         if (silenceStart !== -1) {
-          silenceSegments.push({
+          const segment: SilenceSegment = {
             start: silenceStart / peaks.length,
             end: i / peaks.length
-          });
+          };
+          silenceSegments.push(segment);
           silenceStart = -1;
         }
       }
@@ -298,10 +315,11 @@ export class AudioAnalyzer {
     
     // 处理结尾的静音段
     if (silenceStart !== -1) {
-      silenceSegments.push({
+      const finalSegment: SilenceSegment = {
         start: silenceStart / peaks.length,
         end: 1
-      });
+      };
+      silenceSegments.push(finalSegment);
     }
     
     return silenceSegments;

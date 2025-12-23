@@ -1,6 +1,31 @@
 import { FileManager } from '../manager/FileManager';
 import { common } from '@kit.AbilityKit';
 
+enum AudioFormat {
+  WAV = 'WAV',
+  MP3 = 'MP3',  
+  AAC = 'AAC'
+}
+
+interface AudioFormatInfo {
+  id: string;
+  name: string;
+  extension: string;
+  quality: string;
+}
+
+enum WaveformStyle {
+  LINE = 'LINE',
+  BAR = 'BAR',
+  CURVE = 'CURVE'
+}
+
+interface WaveformStyleInfo {
+  id: string;
+  name: string;
+  colors: string[];
+}
+
 interface SettingItem {
   title: string;
   subtitle?: string;
@@ -27,6 +52,31 @@ export struct MePage {
   @State fileCount: number = 0;
   @State showUserDialog: boolean = false;
   @State newUserName: string = '';
+  
+  // Login related states
+  @State loginDialog: boolean = false;
+  @State loginPhone: string = '';
+  @State loginCode: string = '';
+  @State countdown: number = 0;
+  @State isSendingCode: boolean = false;
+  
+  // Audio format states
+  @State audioFormatDialog: boolean = false;
+  @State currentAudioFormat: AudioFormat = AudioFormat.WAV;
+  @State audioFormats: AudioFormatInfo[] = [
+    { id: 'WAV', name: 'WAV', extension: '.wav', quality: 'high' },
+    { id: 'MP3', name: 'MP3', extension: '.mp3', quality: 'medium' },
+    { id: 'AAC', name: 'AAC', extension: '.aac', quality: 'high' }
+  ];
+  
+  // Waveform style states  
+  @State showWaveformDialog: boolean = false;
+  @State currentWaveformStyle: WaveformStyle = WaveformStyle.LINE;
+  @State waveformStyles: WaveformStyleInfo[] = [
+    { id: 'LINE', name: '线条', colors: ['#3B82F6'] },
+    { id: 'BAR', name: '柱状图', colors: ['#10B981'] },
+    { id: 'CURVE', name: '曲线', colors: ['#F59E0B'] }
+  ];
 
   private fileManager: FileManager | null = null;
   private context: common.UIAbilityContext | null = null;
@@ -66,8 +116,8 @@ export struct MePage {
       this.isDarkMode = darkModePreference;
       
       if (userInfoPreference) {
-        const storedUserInfo = JSON.parse(userInfoPreference);
-        this.userInfo = { ...this.userInfo, ...storedUserInfo };
+        const storedUserInfo = JSON.parse(userInfoPreference) as UserInfo;
+        this.userInfo = storedUserInfo;
       }
 
       // 更新设置列表中的主题模式状态
@@ -182,7 +232,7 @@ export struct MePage {
           Image(this.userInfo.avatar || $r('app.media.avatar'))
             .width(60)
             .height(60)
-            .borderRadius(30)
+            .borderRadius('30vp')
             .backgroundColor('#E5E7EB')
 
           // 头像边框
@@ -224,10 +274,10 @@ export struct MePage {
         .onClick(() => this.handleSettingClick({ title: '账号管理', hasArrow: true, type: 'user' }))
       }
       .width('100%')
-      .padding({ horizontal: 20, vertical: 20 })
+      .padding({ left: 20, right: 20, top: 20, bottom: 20 })
       .backgroundColor('#FFFFFF')
       .borderRadius(16)
-      .margin({ horizontal: 20, bottom: 24 })
+      .margin({ left: 20, right: 20, bottom: 24 })
       .alignItems(VerticalAlign.Center)
 
       // 存储信息卡片
@@ -249,7 +299,7 @@ export struct MePage {
           .width(1)
           .height(40)
           .backgroundColor('#E5E7EB')
-          .margin({ horizontal: 20 })
+          .margin({ left: 20, right: 20 })
 
         Column() {
           Text('占用空间')
@@ -265,10 +315,10 @@ export struct MePage {
         .alignItems(HorizontalAlign.Center)
       }
       .width('100%')
-      .padding({ horizontal: 20, vertical: 16 })
+      .padding({ left: 20, right: 20, top: 16, bottom: 16 })
       .backgroundColor('#FFFFFF')
       .borderRadius(16)
-      .margin({ horizontal: 20, bottom: 24 })
+      .margin({ left: 20, right: 20, bottom: 24 })
       .justifyContent(FlexAlign.Center)
 
       // 设置选项列表
@@ -280,7 +330,7 @@ export struct MePage {
       .width('100%')
       .backgroundColor('#FFFFFF')
       .borderRadius(16)
-      .margin({ horizontal: 20, bottom: 20 })
+      .margin({ left: 20, right: 20, bottom: 20 })
 
       // 其他功能按钮
       Column() {
@@ -318,7 +368,7 @@ export struct MePage {
           })
       }
       .width('100%')
-      .padding({ horizontal: 20 })
+      .padding({ left: 20, right: 20 })
 
       Blank()
     }
@@ -368,11 +418,112 @@ export struct MePage {
     }
     .width('100%')
     .height(item.subtitle ? 60 : 50)
-    .padding({ horizontal: 20, vertical: 8 })
+    .padding({ left: 20, right: 20, top: 8, bottom: 8 })
     .alignItems(VerticalAlign.Center)
     .onClick(() => this.handleSettingClick(item))
     .borderColor('#F3F4F6')
     .borderWidth({ bottom: index < this.settings.length - 1 ? 1 : 0 })
+  }
+
+  @Builder
+  buildLoginDialog() {
+    Column() {
+      Text('登录 / 注册')
+        .fontSize(20)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#1F2937')
+        .margin({ bottom: 32 })
+
+      // 手机号输入
+      Column() {
+        Text('手机号')
+          .fontSize(14)
+          .fontColor('#374151')
+          .alignSelf(ItemAlign.Start)
+          .margin({ bottom: 8 })
+
+        TextInput({ placeholder: '请输入手机号', text: this.loginPhone })
+          .width('100%')
+          .height(44)
+          .fontSize(16)
+          .backgroundColor('#F9FAFB')
+          .borderRadius(8)
+          .border({ width: 1, color: '#E5E7EB' })
+          .type(InputType.PhoneNumber)
+          .onChange((value: string) => {
+            this.loginPhone = value;
+          })
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+      .margin({ bottom: 20 })
+
+      // 验证码输入
+      Column() {
+        Text('验证码')
+          .fontSize(14)
+          .fontColor('#374151')
+          .alignSelf(ItemAlign.Start)
+          .margin({ bottom: 8 })
+
+        Row() {
+          TextInput({ placeholder: '请输入验证码', text: this.loginCode })
+            .layoutWeight(1)
+            .height(44)
+            .fontSize(16)
+            .backgroundColor('#F9FAFB')
+            .borderRadius(8)
+            .border({ width: 1, color: '#E5E7EB' })
+            .type(InputType.Number)
+            .onChange((value: string) => {
+              this.loginCode = value;
+            })
+
+          Button(this.countdown > 0 ? `${this.countdown}s` : '获取验证码')
+            .width(100)
+            .height(44)
+            .backgroundColor(this.countdown > 0 || this.isSendingCode ? '#F3F4F6' : '#6366F1')
+            .fontColor(this.countdown > 0 || this.isSendingCode ? '#9CA3AF' : '#FFFFFF')
+            .fontSize(12)
+            .borderRadius(8)
+            .margin({ left: 12 })
+            .enabled(this.countdown === 0 && !this.isSendingCode)
+            .onClick(() => this.sendVerificationCode())
+        }
+        .width('100%')
+      }
+      .width('100%')
+      .alignItems(HorizontalAlign.Start)
+      .margin({ bottom: 32 })
+
+      // 操作按钮
+      Row() {
+        Button('取消')
+          .width(80)
+          .height(44)
+          .backgroundColor('#F3F4F6')
+          .fontColor('#6B7280')
+          .borderRadius(8)
+          .onClick(() => {
+            this.loginDialog = false;
+            this.resetLoginForm();
+          })
+
+        Button('登录')
+          .width(120)
+          .height(44)
+          .backgroundColor('#6366F1')
+          .borderRadius(8)
+          .margin({ left: 16 })
+          .enabled(this.loginPhone.trim() !== '' && this.loginCode.trim() !== '')
+          .onClick(() => this.handleLogin())
+      }
+      .justifyContent(FlexAlign.End)
+    }
+    .width(320)
+    .padding(24)
+    .backgroundColor('#FFFFFF')
+    .borderRadius(16)
   }
 
   @Builder
@@ -381,6 +532,7 @@ export struct MePage {
       Text('编辑用户信息')
         .fontSize(18)
         .fontWeight(FontWeight.Medium)
+        .fontColor('#1F2937')
         .margin({ bottom: 20 })
 
       Column() {
@@ -411,6 +563,7 @@ export struct MePage {
           .height(40)
           .backgroundColor('#F3F4F6')
           .fontColor('#6B7280')
+          .borderRadius(8)
           .onClick(() => {
             this.showUserDialog = false;
             this.newUserName = '';
@@ -420,8 +573,9 @@ export struct MePage {
           .width(80)
           .height(40)
           .backgroundColor('#6366F1')
+          .borderRadius(8)
           .margin({ left: 16 })
-          .enabled(this.newUserName.trim() !== '' && this.newUserName.trim() !== this.userInfo.name)
+          .enabled(this.newUserName.trim() !== '' && this.newUserName.trim() !== this.userInfo?.name)
           .onClick(() => this.updateUserInfo())
       }
     }
@@ -429,5 +583,231 @@ export struct MePage {
     .padding(24)
     .backgroundColor('#FFFFFF')
     .borderRadius(16)
+  }
+
+  @Builder
+  waveformStyleDialog() {
+    Column() {
+      Text('选择波形样式')
+        .fontSize(18)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#1F2937')
+        .margin({ bottom: 24 })
+
+      Column() {
+        ForEach(this.waveformStyles, (style: WaveformStyleInfo, index: number) => {
+          Row() {
+            // 波形样式预览
+            Row() {
+              ForEach([1, 2, 3, 4, 5], (item: number) => {
+                Column()
+                  .width(4)
+                  .height(Math.random() * 20 + 10)
+                  .backgroundColor(style.colors[0])
+                  .borderRadius('2vp')
+                  .margin({ right: 2 })
+              })
+            }
+            .width(60)
+            .height(30)
+            .padding(8)
+            .backgroundColor('#F9FAFB')
+            .borderRadius(8)
+            .justifyContent(FlexAlign.Center)
+            .alignItems(VerticalAlign.Center)
+            .margin({ right: 12 })
+
+            Text(style.name)
+              .fontSize(16)
+              .fontColor('#1F2937')
+              .layoutWeight(1)
+
+            if (this.currentWaveformStyle === style.id) {
+              Image($r('app.media.ic_check'))
+                .width(16)
+                .height(16)
+                .fillColor('#6366F1')
+            }
+          }
+          .width('100%')
+          .height(50)
+          .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+          .backgroundColor(this.currentWaveformStyle === style.id ? '#F0F9FF' : Color.Transparent)
+          .borderRadius(8)
+          .alignItems(VerticalAlign.Center)
+          .onClick(() => this.setWaveformStyle(style))
+
+          if (index < this.waveformStyles.length - 1) {
+            Divider()
+              .color('#F3F4F6')
+              .strokeWidth(1)
+              .margin({ left: 16, right: 16 })
+          }
+        })
+      }
+      .width('100%')
+      .height(300)
+
+      Row() {
+        Button('取消')
+          .width(80)
+          .height(40)
+          .backgroundColor('#F3F4F6')
+          .fontColor('#6B7280')
+          .borderRadius(8)
+          .onClick(() => {
+            this.showWaveformDialog = false;
+          })
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.End)
+      .margin({ top: 24 })
+    }
+    .width(320)
+    .padding(24)
+    .backgroundColor('#FFFFFF')
+    .borderRadius(16)
+  }
+
+  @Builder
+  buildAudioFormatDialog() {
+    Column() {
+      Text('选择录音格式')
+        .fontSize(18)
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#1F2937')
+        .margin({ bottom: 24 })
+
+      Column() {
+        ForEach(this.audioFormats, (format: AudioFormatInfo, index: number) => {
+          Row() {
+            Column() {
+              Text(format.name)
+                .fontSize(16)
+                .fontColor('#1F2937')
+                .alignSelf(ItemAlign.Start)
+
+              Text(`${format.extension.toUpperCase()} · ${this.getQualityText(format.quality)}`)
+                .fontSize(12)
+                .fontColor('#6B7280')
+                .alignSelf(ItemAlign.Start)
+                .margin({ top: 4 })
+            }
+            .layoutWeight(1)
+            .alignItems(HorizontalAlign.Start)
+
+            if (this.currentAudioFormat === format.id) {
+              Image($r('app.media.ic_check'))
+                .width(16)
+                .height(16)
+                .fillColor('#6366F1')
+            }
+          }
+          .width('100%')
+          .height(60)
+          .padding({ left: 16, right: 16, top: 8, bottom: 8 })
+          .backgroundColor(this.currentAudioFormat === format.id ? '#F0F9FF' : Color.Transparent)
+          .borderRadius(8)
+          .alignItems(VerticalAlign.Center)
+          .onClick(() => this.setAudioFormat(format))
+
+          if (index < this.audioFormats.length - 1) {
+            Divider()
+              .color('#F3F4F6')
+              .strokeWidth(1)
+              .margin({ left: 16, right: 16 })
+          }
+        })
+      }
+      .width('100%')
+      .height(300)
+
+      Row() {
+        Button('取消')
+          .width(80)
+          .height(40)
+          .backgroundColor('#F3F4F6')
+          .fontColor('#6B7280')
+          .borderRadius(8)
+          .onClick(() => {
+            this.audioFormatDialog = false;
+          })
+      }
+      .width('100%')
+      .justifyContent(FlexAlign.End)
+      .margin({ top: 24 })
+    }
+    .width(320)
+    .padding(24)
+    .backgroundColor('#FFFFFF')
+    .borderRadius(16)
+  }
+
+  // 获取质量描述文本
+  private getQualityText(quality: string): string {
+    switch (quality) {
+      case 'high':
+        return '高质量';
+      case 'medium':
+        return '标准质量';
+      case 'low':
+        return '压缩质量';
+      default:
+        return '标准质量';
+    }
+  }
+
+  // 发送验证码
+  private sendVerificationCode() {
+    if (!this.loginPhone || this.isSendingCode) return;
+    
+    this.isSendingCode = true;
+    this.countdown = 60;
+    
+    // 模拟发送验证码
+    const timer = setInterval(() => {
+      this.countdown--;
+      if (this.countdown <= 0) {
+        clearInterval(timer);
+        this.isSendingCode = false;
+      }
+    }, 1000);
+    
+    console.info('发送验证码到:', this.loginPhone);
+  }
+
+  // 重置登录表单
+  private resetLoginForm() {
+    this.loginPhone = '';
+    this.loginCode = '';
+    this.countdown = 0;
+    this.isSendingCode = false;
+  }
+
+  // 处理登录
+  private handleLogin() {
+    if (!this.loginPhone || !this.loginCode) {
+      console.warn('手机号或验证码不能为空');
+      return;
+    }
+    
+    // 模拟登录逻辑
+    console.info('登录:', { phone: this.loginPhone, code: this.loginCode });
+    this.loginDialog = false;
+    this.resetLoginForm();
+  }
+
+  // 设置波形样式
+  private setWaveformStyle(style: WaveformStyleInfo) {
+    this.currentWaveformStyle = style.id as WaveformStyle;
+    this.showWaveformDialog = false;
+    console.info('设置波形样式为:', style.name);
+  }
+
+  // 设置音频格式  
+  private setAudioFormat(format: AudioFormatInfo) {
+    this.currentAudioFormat = format.id as AudioFormat;
+    this.audioFormatDialog = false;
+    console.info('设置音频格式为:', format.name);
   }
 }

@@ -34,7 +34,7 @@ export class FileManager {
   }
 
   // 保存音频文件信息
-  async saveAudioFile(sourceFilePath: string, name: string, type: AudioFileInfo['type']): Promise<AudioFileInfo> {
+  async saveAudioFile(sourceFilePath: string, name: string, type: 'original' | 'reversed' | 'edited'): Promise<AudioFileInfo> {
     try {
       const id = this.generateId();
       const timestamp = new Date().getTime();
@@ -65,7 +65,7 @@ export class FileManager {
       return audioFileInfo;
     } catch (error) {
       console.error('Failed to save audio file:', error);
-      throw error;
+      throw new Error('Failed to save audio file');
     }
   }
 
@@ -96,7 +96,7 @@ export class FileManager {
   }
 
   // 根据类型获取音频文件
-  async getAudioFilesByType(type: AudioFileInfo['type']): Promise<AudioFileInfo[]> {
+  async getAudioFilesByType(type: 'original' | 'reversed' | 'edited'): Promise<AudioFileInfo[]> {
     const allFiles = await this.getAllAudioFiles();
     return allFiles.filter(file => file.type === type);
   }
@@ -238,7 +238,7 @@ export class FileManager {
       fileIo.closeSync(targetFile);
     } catch (error) {
       console.error('Failed to copy file:', error);
-      throw error;
+      throw new Error('Failed to copy file');
     }
   }
 
@@ -250,7 +250,7 @@ export class FileManager {
       await this.updateFileInfoStorage(allFiles);
     } catch (error) {
       console.error('Failed to save file info to storage:', error);
-      throw error;
+      throw new Error('Failed to save file info to storage');
     }
   }
 
@@ -262,7 +262,7 @@ export class FileManager {
       AppStorage.setOrCreate(storageKey, jsonData);
     } catch (error) {
       console.error('Failed to update file info storage:', error);
-      throw error;
+      throw new Error('Failed to update file info storage');
     }
   }
 

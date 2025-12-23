@@ -43,7 +43,7 @@ export class AudioManager {
 
     } catch (error) {
       console.error('Failed to init audio recorder:', error);
-      throw error;
+      throw new Error('Failed to init audio recorder');
     }
   }
 
@@ -65,7 +65,7 @@ export class AudioManager {
 
     } catch (error) {
       console.error('Failed to init audio player:', error);
-      throw error;
+      throw new Error('Failed to init audio player');
     }
   }
 
@@ -82,14 +82,9 @@ export class AudioManager {
       const filesDir = this.context.filesDir;
       this.currentRecordingPath = `${filesDir}/${fileName}`;
 
-      // 录音配置
-      const config: AudioRecorderConfig = {
-        audioEncoderMime: 'audio/wav',
-        audioEncodingBitRate: 128000,
-        audioSampleRate: 44100,
-        numberOfChannels: 2,
-        outputFormat: 'wav',
-        uri: `file://${this.currentRecordingPath}`
+      // 录音配置 - 使用最简配置（移除profile）
+      const config: media.AVRecorderConfig = {
+        url: `file://${this.currentRecordingPath}`
       };
 
       await this.audioRecorder!.prepare(config);
@@ -100,7 +95,7 @@ export class AudioManager {
       return this.currentRecordingPath;
     } catch (error) {
       console.error('Failed to start recording:', error);
-      throw error;
+      throw new Error('Failed to start recording');
     }
   }
 
@@ -119,7 +114,7 @@ export class AudioManager {
       return '';
     } catch (error) {
       console.error('Failed to stop recording:', error);
-      throw error;
+      throw new Error('Failed to stop recording');
     }
   }
 
@@ -142,7 +137,7 @@ export class AudioManager {
       console.info(`Playing audio: ${filePath}`);
     } catch (error) {
       console.error('Failed to play audio:', error);
-      throw error;
+      throw new Error('Failed to play audio');
     }
   }
 
@@ -155,7 +150,7 @@ export class AudioManager {
       }
     } catch (error) {
       console.error('Failed to stop playing:', error);
-      throw error;
+      throw new Error('Failed to stop playing');
     }
   }
 
@@ -168,7 +163,7 @@ export class AudioManager {
       }
     } catch (error) {
       console.error('Failed to pause playing:', error);
-      throw error;
+      throw new Error('Failed to pause playing');
     }
   }
 
@@ -181,7 +176,7 @@ export class AudioManager {
       }
     } catch (error) {
       console.error('Failed to resume playing:', error);
-      throw error;
+      throw new Error('Failed to resume playing');
     }
   }
 
@@ -210,7 +205,7 @@ export class AudioManager {
       
     } catch (error) {
       console.error('Failed to reverse audio:', error);
-      throw error;
+      throw new Error('Failed to reverse audio');
     }
   }
 
@@ -225,7 +220,7 @@ export class AudioManager {
       return buffer;
     } catch (error) {
       console.error('Failed to read audio file:', error);
-      throw error;
+      throw new Error('Failed to read audio file');
     }
   }
 
@@ -260,7 +255,7 @@ export class AudioManager {
       return reversedBuffer;
     } catch (error) {
       console.error('Failed to reverse audio data:', error);
-      throw error;
+      throw new Error('Failed to reverse audio data');
     }
   }
 
@@ -272,7 +267,7 @@ export class AudioManager {
       fileIo.closeSync(file);
     } catch (error) {
       console.error('Failed to write audio file:', error);
-      throw error;
+      throw new Error('Failed to write audio file');
     }
   }
 
