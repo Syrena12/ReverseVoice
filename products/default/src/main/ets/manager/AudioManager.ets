@@ -84,7 +84,14 @@ export class AudioManager {
 
       // 录音配置 - 使用最简配置（移除profile）
       const config: media.AVRecorderConfig = {
-        url: `file://${this.currentRecordingPath}`
+        url: `file://${this.currentRecordingPath}`,
+        profile: {
+          // audioEncoderMime: media.CodecMimeType.AUDIO_RAW, // 原始PCM格式
+          audioSampleRate: 44100, // 采样率
+          audioChannels: 2,       // 双声道
+          fileFormat: media.ContainerFormatType.CFT_MPEG_4A
+          // audioEncodingBitRate: 16000 // 编码比特率
+        }
       };
 
       await this.audioRecorder!.prepare(config);
