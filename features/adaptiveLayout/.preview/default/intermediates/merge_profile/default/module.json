@@ -4,7 +4,7 @@
 		"debug": true,
 		"versionCode": 1000000,
 		"versionName": "1.0.0",
-		"minAPIVersion": 60001021,
+		"minAPIVersion": 50100018,
 		"targetAPIVersion": 60001021,
 		"apiReleaseType": "Release",
 		"targetMinorAPIVersion": 0,

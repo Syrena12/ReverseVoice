@@ -46,10 +46,11 @@ struct Index {
       }
       .width('100%')
       .height(80)
-      .backgroundColor(this.isDarkMode ? '#374151' : '#FFFFFF')
-      .borderColor(this.isDarkMode ? '#4B5563' : '#E5E7EB')
+      .backgroundColor('#FFFFFF')
+      .borderColor('#E5E7EB')
       .borderWidth({ top: 1 })
       .padding({ top: 8, bottom: 8 })
+      .justifyContent(FlexAlign.SpaceAround)
     }
     .height('100%')
     .width('100%')
@@ -68,7 +69,7 @@ struct Index {
         .fontSize(12)
         .margin({ top: 4 })
     }
-    .width('100%')
+    .layoutWeight(1)
     .height('100%')
     .justifyContent(FlexAlign.Center)
     .alignItems(HorizontalAlign.Center)

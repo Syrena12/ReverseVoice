@@ -22,8 +22,8 @@ export struct RecordPage {
   private recordTimer: number = -1;
   private recordStartTime: number = 0;
 
-  aboutToAppear() {
-    this.initializeManagers();
+  async aboutToAppear() {
+    await this.initializeManagers();
     this.loadThemePreference();
   }
 
@@ -87,7 +87,14 @@ export struct RecordPage {
   private async startRecording() {
     try {
       if (!this.audioManager) {
-        this.errorMessage = 'Audio manager not initialized';
+        this.errorMessage = 'AudioManager未初始化，请稍后再试';
+        console.error('AudioManager is not initialized');
+        return;
+      }
+
+      if (!this.context) {
+        this.errorMessage = '应用上下文未初始化';
+        console.error('Application context is not initialized');
         return;
       }
 
@@ -95,14 +102,18 @@ export struct RecordPage {
       const hasPermission = await this.checkPermissions();
       if (!hasPermission) {
         this.errorMessage = '请授予麦克风权限';
+        console.error('Microphone permission not granted');
         return;
       }
 
+      console.info('Starting recording...');
       this.currentRecordingPath = await this.audioManager.startRecording();
       this.isRecording = true;
       this.recordStartTime = new Date().getTime();
       this.showActions = false;
       this.errorMessage = '';
+      
+      console.info(`Recording started successfully: ${this.currentRecordingPath}`);
       
       // 开始计时
       this.recordTimer = setInterval(() => {
@@ -112,7 +123,7 @@ export struct RecordPage {
 
     } catch (error) {
       console.error('Failed to start recording:', error);
-      this.errorMessage = '录音启动失败';
+      this.errorMessage = `录音启动失败: ${error.message || error}`;
       this.isRecording = false;
     }
   }

@@ -45,8 +45,8 @@ interface UserInfo {
 export struct MePage {
   @State isDarkMode: boolean = false;
   @State userInfo: UserInfo = {
-    name: '徐磊',
-    phone: '189****3459'
+    name: 'Syrena',
+    phone: '133****1212'
   };
   @State totalFileSize: string = '0 B';
   @State fileCount: number = 0;
